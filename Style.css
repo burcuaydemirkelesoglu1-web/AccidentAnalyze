@@ -1,0 +1,45 @@
+:root {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --imm: #f59e0b;
+    --und: #8b5cf6;
+    --root: #10b981;
+    --bg: #f8fafc;
+    --line: #cbd5e1;
+}
+
+body, html { margin: 0; padding: 0; font-family: 'Inter', sans-serif; height: 100%; background: var(--bg); }
+
+.app-container { display: flex; height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 380px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.05); }
+.header { padding: 20px; background: var(--primary); color: white; }
+.chat-log { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.msg { padding: 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
+.bot { background: #f1f5f9; align-self: flex-start; border-left: 4px solid var(--accent); }
+.user { background: var(--accent); color: white; align-self: flex-end; }
+
+/* Input Area */
+.input-container { padding: 20px; border-top: 1px solid #eee; }
+.action-buttons { margin-bottom: 10px; }
+.action-buttons button { width: 100%; padding: 8px; font-size: 12px; cursor: pointer; background: #f8fafc; border: 1px solid #ddd; border-radius: 6px; }
+input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; box-sizing: border-box; }
+
+/* Mapping Tree */
+.map-viewport { flex: 1; padding: 100px; overflow: auto; background: white; }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 30px; }
+.tree ul { padding-left: 60px; position: relative; }
+.tree li { position: relative; display: flex; align-items: center; }
+
+/* Çizgiler */
+.tree li::before { content: ""; position: absolute; left: -60px; width: 60px; height: 2px; background: var(--line); }
+.tree ul::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.tree > li::before { display: none; }
+
+.box { 
+    background: white; border: 2.5px solid var(--primary); padding: 15px; border-radius: 12px; 
+    min-width: 200px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+}
+.box.active { border-color: var(--accent); box-shadow: 0 0 15px rgba(37,99,235,0.2); transform: scale(1.05); }
+.tag { font-size: 9px; font-weight: bold; color: white; padding: 3px 8px; border-radius: 5px; margin-bottom: 8px; display: inline-block; text-transform: uppercase; }
