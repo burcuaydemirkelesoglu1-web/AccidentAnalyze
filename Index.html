@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSG65 & ILO Akıllı Analiz Motoru</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <header class="header">
+                <h1>İSG Analiz Asistanı</h1>
+                <p>HSG65 & ILO Standartları</p>
+            </header>
+            <div id="chat-log" class="chat-log">
+                <div class="msg bot">Merhaba Müfettiş. Analizi başlatmak için lütfen <b>ana olayı</b> yazın.</div>
+            </div>
+            <div class="input-container">
+                <div class="action-buttons">
+                    <button onclick="addBranch()" title="Seçili kutudan yeni dal aç">↓ Yan Dal Ekle</button>
+                </div>
+                <input type="text" id="userInput" placeholder="Cevabınızı buraya yazın..." onkeypress="if(event.key==='Enter') handleInput()">
+            </div>
+        </aside>
+
+        <main class="map-viewport">
+            <div class="tree-wrapper">
+                <ul class="tree" id="tree-root"></ul>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
