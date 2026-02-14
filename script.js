@@ -1,69 +1,91 @@
-let activeNode = null;
-let depth = 0;
+// Analiz Durum Takibi
+let stepCount = 0;
+const analysisData = [];
 
-function handleInput() {
-    const input = document.getElementById('userInput');
-    const val = input.value.trim();
-    if (!val) return;
+// DOM Elemanları
+const chatLog = document.getElementById('chat-log');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const mapContainer = document.getElementById('map-container');
 
-    addChat(val, 'user');
+// Başlangıç Mesajı
+window.onload = () => {
+    addMessage("Merhaba Müfettiş. Lütfen analiz etmek istediğiniz kaza veya olayı kısaca tarif edin.", 'bot');
+};
+
+// Mesaj Gönderme Fonksiyonu
+function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    userInput.value = '';
     
-    if (depth === 0) {
-        createNode(val, document.getElementById('tree-root'), "INCIDENT", "#64748b");
+    // Analiz Mantığı
+    processAnalysis(text);
+}
+
+function addMessage(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg ${sender}`;
+    msgDiv.innerText = text;
+    chatLog.appendChild(msgDiv);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function processAnalysis(text) {
+    stepCount++;
+    let category = "";
+    let nextQuestion = "";
+
+    // HSG65 Mantığına Göre Kategorizasyon
+    if (stepCount === 1) {
+        category = "OLAY";
+        nextQuestion = "Bu olayın gerçekleşmesine neden olan 'Doğrudan Neden' (Güvensiz durum veya davranış) nedir?";
+    } else if (stepCount <= 3) {
+        category = "DOĞRUDAN NEDEN";
+        nextQuestion = "Peki, bu durumun/davranışın altında yatan 'Dolaylı Neden' (Eğitim eksikliği, denetim azlığı vb.) ne olabilir?";
+    } else if (stepCount === 4) {
+        category = "DOLAYLI NEDEN";
+        nextQuestion = "Son olarak, bu dolaylı nedenin 'Kök Nedeni' (Yönetim sistemi hatası, politika eksikliği) nedir?";
     } else {
-        const decision = analyzeCategory(val, depth);
-        createNode(val, activeNode.querySelector('ul'), decision.cat, decision.color);
+        category = "KÖK NEDEN";
+        nextQuestion = "Analiz tamamlandı. Kök neden tespit edildi. Başka bir ekleme yapmak ister misiniz?";
     }
 
-    depth++;
-    input.value = "";
-    setTimeout(() => askBot(`Peki, neden <b>"${val}"</b>?`), 600);
+    // Haritaya Ekle
+    addToMap(text, category);
+    
+    // Asistanın Cevabı (Gecikmeli)
+    setTimeout(() => {
+        addMessage(nextQuestion, 'bot');
+    }, 600);
 }
 
-function analyzeCategory(text, currentDepth) {
-    const t = text.toLowerCase();
-    const isUnderlying = /eğitim|bakım|prosedür|denetim|plan|yetkinlik|amir|iletişim|tasarım/.test(t);
-    const isRoot = /politika|kültür|bütçe|üst yönetim|yatırım|vizyon|taahhüt|organizasyon|liderlik/.test(t);
-
-    // Hiyerarşik Kilit: 4. derinlikten önce ROOT olamaz
-    if (currentDepth >= 4 && isRoot) return { cat: "ROOT", color: "#10b981" };
-    if (currentDepth >= 1 && isUnderlying) return { cat: "UNDERLYING", color: "#8b5cf6" };
-    return { cat: "IMMEDIATE", color: "#f59e0b" };
-}
-
-function createNode(text, parent, cat, color) {
-    const li = document.createElement('li');
-    li.innerHTML = `
-        <div class="box" onclick="selectNode(this.parentElement)">
-            <span class="tag" style="background:${color}">${cat}</span><br>
-            <span class="node-text">${text}</span>
-        </div>
-        <ul></ul>
+function addToMap(text, category) {
+    const node = document.createElement('div');
+    node.className = 'map-node fade-in';
+    
+    // Kategoriye göre renk sınıfı ekle
+    const categoryClass = category.replace(/\s/g, '-').toLowerCase();
+    
+    node.innerHTML = `
+        <div class="node-category ${categoryClass}">${category}</div>
+        <div class="node-text">${text}</div>
     `;
-    parent.appendChild(li);
-    selectNode(li);
+    
+    mapContainer.appendChild(node);
+    
+    // Otomatik Çizgi Çizimi (Görsel bağlantı)
+    if (mapContainer.children.length > 1) {
+        const line = document.createElement('div');
+        line.className = 'map-line';
+        mapContainer.insertBefore(line, node);
+    }
 }
 
-function selectNode(li) {
-    document.querySelectorAll('.box').forEach(b => b.classList.remove('active'));
-    activeNode = li;
-    activeNode.querySelector('.box').classList.add('active');
-}
-
-function addBranch() {
-    if (!activeNode || depth === 0) return;
-    // Seçili düğümün üstüne git ve yeni bir çocuk dal aç
-    const parentNode = activeNode.parentElement.parentElement;
-    if (parentNode.tagName === "LI") selectNode(parentNode);
-    askBot("Tamam, bu nokta için alternatif bir neden giriniz.");
-}
-
-function addChat(t, s) {
-    const chat = document.getElementById('chat-log');
-    chat.innerHTML += `<div class="msg ${s}">${t}</div>`;
-    chat.scrollTop = chat.scrollHeight;
-}
-
-function askBot(t) {
-    addChat(t, 'bot');
-}
+// Enter Tuşu Dinleyici
+userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+sendBtn.addEventListener('click', sendMessage);
