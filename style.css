@@ -1,91 +1,66 @@
-// Analiz Durum Takibi
-let stepCount = 0;
-const analysisData = [];
-
-// DOM Elemanları
-const chatLog = document.getElementById('chat-log');
-const userInput = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const mapContainer = document.getElementById('map-container');
-
-// Başlangıç Mesajı
-window.onload = () => {
-    addMessage("Merhaba Müfettiş. Lütfen analiz etmek istediğiniz kaza veya olayı kısaca tarif edin.", 'bot');
-};
-
-// Mesaj Gönderme Fonksiyonu
-function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    addMessage(text, 'user');
-    userInput.value = '';
-    
-    // Analiz Mantığı
-    processAnalysis(text);
+:root {
+  --primary: #0f172a;
+  --accent: #2563eb;
+  /* HSG65 Renk Paleti */
+  --olay: #64748b;
+  --dogrudan-neden: #f59e0b;
+  --dolayli-neden: #3b82f6;
+  --kok-neden: #10b981;
+  --bg: #f8fafc;
 }
 
-function addMessage(text, sender) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `msg ${sender}`;
-    msgDiv.innerText = text;
-    chatLog.appendChild(msgDiv);
-    chatLog.scrollTop = chatLog.scrollHeight;
+body, html { margin: 0; padding: 0; font-family: 'Inter', sans-serif; height: 100%; background: var(--bg); overflow: hidden; }
+
+.app-container { display: flex; height: 100vh; }
+
+/* Sol Panel: Sohbet */
+.sidebar { 
+    width: 380px; background: white; border-right: 1px solid #e2e8f0; 
+    display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,0.05); 
 }
 
-function processAnalysis(text) {
-    stepCount++;
-    let category = "";
-    let nextQuestion = "";
+.header { padding: 24px; background: var(--primary); color: white; }
+.header h1 { margin: 0; font-size: 20px; }
 
-    // HSG65 Mantığına Göre Kategorizasyon
-    if (stepCount === 1) {
-        category = "OLAY";
-        nextQuestion = "Bu olayın gerçekleşmesine neden olan 'Doğrudan Neden' (Güvensiz durum veya davranış) nedir?";
-    } else if (stepCount <= 3) {
-        category = "DOĞRUDAN NEDEN";
-        nextQuestion = "Peki, bu durumun/davranışın altında yatan 'Dolaylı Neden' (Eğitim eksikliği, denetim azlığı vb.) ne olabilir?";
-    } else if (stepCount === 4) {
-        category = "DOLAYLI NEDEN";
-        nextQuestion = "Son olarak, bu dolaylı nedenin 'Kök Nedeni' (Yönetim sistemi hatası, politika eksikliği) nedir?";
-    } else {
-        category = "KÖK NEDEN";
-        nextQuestion = "Analiz tamamlandı. Kök neden tespit edildi. Başka bir ekleme yapmak ister misiniz?";
-    }
+#chat-log { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.msg { padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
+.bot { background: #f1f5f9; align-self: flex-start; border-left: 4px solid var(--accent); }
+.user { background: var(--accent); color: white; align-self: flex-end; }
 
-    // Haritaya Ekle
-    addToMap(text, category);
-    
-    // Asistanın Cevabı (Gecikmeli)
-    setTimeout(() => {
-        addMessage(nextQuestion, 'bot');
-    }, 600);
+/* Giriş Alanı */
+.input-area { padding: 20px; border-top: 1px solid #eee; background: white; }
+input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; box-sizing: border-box; }
+
+/* Sağ Panel: Harita */
+#map-container { 
+    flex: 1; padding: 60px; overflow: auto; display: flex; 
+    align-items: center; gap: 40px; background: white;
 }
 
-function addToMap(text, category) {
-    const node = document.createElement('div');
-    node.className = 'map-node fade-in';
-    
-    // Kategoriye göre renk sınıfı ekle
-    const categoryClass = category.replace(/\s/g, '-').toLowerCase();
-    
-    node.innerHTML = `
-        <div class="node-category ${categoryClass}">${category}</div>
-        <div class="node-text">${text}</div>
-    `;
-    
-    mapContainer.appendChild(node);
-    
-    // Otomatik Çizgi Çizimi (Görsel bağlantı)
-    if (mapContainer.children.length > 1) {
-        const line = document.createElement('div');
-        line.className = 'map-line';
-        mapContainer.insertBefore(line, node);
-    }
+/* Harita Kutucukları */
+.map-node {
+    min-width: 220px; max-width: 280px; background: white; padding: 20px;
+    border-radius: 12px; border: 2.5px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative;
 }
 
-// Enter Tuşu Dinleyici
-userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
-sendBtn.addEventListener('click', sendMessage);
+/* Kategori Etiketleri */
+.node-category {
+    font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px;
+    color: white; text-transform: uppercase; margin-bottom: 10px; display: inline-block;
+}
+
+.olay { background: var(--olay); }
+.dogrudan-neden { background: var(--dogrudan-neden); }
+.dolayli-neden { background: var(--dolayli-neden); }
+.kok-neden { background: var(--kok-neden); }
+
+.node-text { font-size: 14px; color: var(--primary); font-weight: 500; line-height: 1.4; }
+
+/* Bağlantı Çizgileri */
+.map-line {
+    width: 40px; height: 3px; background: #cbd5e1; flex-shrink: 0;
+}
+
+.fade-in { animation: fadeIn 0.5s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
