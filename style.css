@@ -1,45 +1,91 @@
-:root {
-    --primary: #0f172a;
-    --accent: #2563eb;
-    --imm: #f59e0b;
-    --und: #8b5cf6;
-    --root: #10b981;
-    --bg: #f8fafc;
-    --line: #cbd5e1;
+// Analiz Durum Takibi
+let stepCount = 0;
+const analysisData = [];
+
+// DOM Elemanları
+const chatLog = document.getElementById('chat-log');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const mapContainer = document.getElementById('map-container');
+
+// Başlangıç Mesajı
+window.onload = () => {
+    addMessage("Merhaba Müfettiş. Lütfen analiz etmek istediğiniz kaza veya olayı kısaca tarif edin.", 'bot');
+};
+
+// Mesaj Gönderme Fonksiyonu
+function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    userInput.value = '';
+    
+    // Analiz Mantığı
+    processAnalysis(text);
 }
 
-body, html { margin: 0; padding: 0; font-family: 'Inter', sans-serif; height: 100%; background: var(--bg); }
-
-.app-container { display: flex; height: 100vh; }
-
-/* Sidebar */
-.sidebar { width: 380px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.05); }
-.header { padding: 20px; background: var(--primary); color: white; }
-.chat-log { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-.msg { padding: 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; max-width: 85%; }
-.bot { background: #f1f5f9; align-self: flex-start; border-left: 4px solid var(--accent); }
-.user { background: var(--accent); color: white; align-self: flex-end; }
-
-/* Input Area */
-.input-container { padding: 20px; border-top: 1px solid #eee; }
-.action-buttons { margin-bottom: 10px; }
-.action-buttons button { width: 100%; padding: 8px; font-size: 12px; cursor: pointer; background: #f8fafc; border: 1px solid #ddd; border-radius: 6px; }
-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; box-sizing: border-box; }
-
-/* Mapping Tree */
-.map-viewport { flex: 1; padding: 100px; overflow: auto; background: white; }
-.tree, .tree ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 30px; }
-.tree ul { padding-left: 60px; position: relative; }
-.tree li { position: relative; display: flex; align-items: center; }
-
-/* Çizgiler */
-.tree li::before { content: ""; position: absolute; left: -60px; width: 60px; height: 2px; background: var(--line); }
-.tree ul::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--line); }
-.tree > li::before { display: none; }
-
-.box { 
-    background: white; border: 2.5px solid var(--primary); padding: 15px; border-radius: 12px; 
-    min-width: 200px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+function addMessage(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg ${sender}`;
+    msgDiv.innerText = text;
+    chatLog.appendChild(msgDiv);
+    chatLog.scrollTop = chatLog.scrollHeight;
 }
-.box.active { border-color: var(--accent); box-shadow: 0 0 15px rgba(37,99,235,0.2); transform: scale(1.05); }
-.tag { font-size: 9px; font-weight: bold; color: white; padding: 3px 8px; border-radius: 5px; margin-bottom: 8px; display: inline-block; text-transform: uppercase; }
+
+function processAnalysis(text) {
+    stepCount++;
+    let category = "";
+    let nextQuestion = "";
+
+    // HSG65 Mantığına Göre Kategorizasyon
+    if (stepCount === 1) {
+        category = "OLAY";
+        nextQuestion = "Bu olayın gerçekleşmesine neden olan 'Doğrudan Neden' (Güvensiz durum veya davranış) nedir?";
+    } else if (stepCount <= 3) {
+        category = "DOĞRUDAN NEDEN";
+        nextQuestion = "Peki, bu durumun/davranışın altında yatan 'Dolaylı Neden' (Eğitim eksikliği, denetim azlığı vb.) ne olabilir?";
+    } else if (stepCount === 4) {
+        category = "DOLAYLI NEDEN";
+        nextQuestion = "Son olarak, bu dolaylı nedenin 'Kök Nedeni' (Yönetim sistemi hatası, politika eksikliği) nedir?";
+    } else {
+        category = "KÖK NEDEN";
+        nextQuestion = "Analiz tamamlandı. Kök neden tespit edildi. Başka bir ekleme yapmak ister misiniz?";
+    }
+
+    // Haritaya Ekle
+    addToMap(text, category);
+    
+    // Asistanın Cevabı (Gecikmeli)
+    setTimeout(() => {
+        addMessage(nextQuestion, 'bot');
+    }, 600);
+}
+
+function addToMap(text, category) {
+    const node = document.createElement('div');
+    node.className = 'map-node fade-in';
+    
+    // Kategoriye göre renk sınıfı ekle
+    const categoryClass = category.replace(/\s/g, '-').toLowerCase();
+    
+    node.innerHTML = `
+        <div class="node-category ${categoryClass}">${category}</div>
+        <div class="node-text">${text}</div>
+    `;
+    
+    mapContainer.appendChild(node);
+    
+    // Otomatik Çizgi Çizimi (Görsel bağlantı)
+    if (mapContainer.children.length > 1) {
+        const line = document.createElement('div');
+        line.className = 'map-line';
+        mapContainer.insertBefore(line, node);
+    }
+}
+
+// Enter Tuşu Dinleyici
+userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+sendBtn.addEventListener('click', sendMessage);
